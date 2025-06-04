@@ -4,7 +4,6 @@ const pool = require('./postgres/pool');
 const paletteRoutes = require('./routes/paletteRoutes');
 
 const createServer = async () => {
-  // Test DB connection at startup
   try {
     await pool.connect();
     console.log('✅ Connected to database');
@@ -17,10 +16,8 @@ const createServer = async () => {
     host: 'localhost',
   });
 
-  // Register your API routes
   server.route(paletteRoutes);
 
-  // Health check endpoint
   server.route({
     method: 'GET',
     path: '/health',
