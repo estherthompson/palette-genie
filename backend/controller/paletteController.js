@@ -1,6 +1,6 @@
 const paletteModel = require('../models/paletteModel');
 
-const getAllPalettes = async (reques, h) => {
+const getAllPalettes = async (request, h) => {
 
     try{
         const palettes = await paletteModel.getAllPalettes();

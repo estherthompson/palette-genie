@@ -1,4 +1,4 @@
-const paletteController = require('../controllers/paletteController');
+const paletteController = require('../controller/paletteController');
 
 const paletteRoutes = [
   {

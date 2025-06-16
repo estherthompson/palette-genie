@@ -2,6 +2,7 @@ require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const pool = require('./postgres/pool'); 
 const paletteRoutes = require('./routes/paletteRoutes');
+const authRoutes = require('./routes/authRoutes')
 
 const createServer = async () => {
   try {
@@ -17,7 +18,8 @@ const createServer = async () => {
   });
 
   server.route(paletteRoutes);
-
+  server.route(authRoutes);
+  
   server.route({
     method: 'GET',
     path: '/health',
