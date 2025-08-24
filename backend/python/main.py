@@ -131,6 +131,33 @@ async def generate_harmonious_palette():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating palette: {str(e)}")
 
+@app.post("/api/user-preferences")
+async def update_user_preferences(preferences: dict = Body(...)):
+    """
+    Update user preferences for paint mixing (drops per ml, preferred units, etc.)
+    """
+    try:
+        # Validate preferences
+        valid_preferences = {}
+        if 'drops_per_ml' in preferences:
+            valid_preferences['drops_per_ml'] = float(preferences['drops_per_ml'])
+        if 'total_ml' in preferences:
+            valid_preferences['total_ml'] = float(preferences['total_ml'])
+        if 'preferred_unit' in preferences:
+            valid_preferences['preferred_unit'] = preferences['preferred_unit']
+        
+        # Store preferences (in production, this would go to a database)
+        # For now, we'll return them for the current session
+        
+        return {
+            "success": True,
+            "message": "User preferences updated successfully",
+            "preferences": valid_preferences
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating preferences: {str(e)}")
+
 @app.get("/api/color-theory/{color_name}")
 async def get_color_theory(color_name: str):
     """
@@ -286,7 +313,8 @@ async def get_brand_colors(brand_name: str):
 async def analyze_colors_with_brand(
     image: UploadFile = File(...),
     brand_name: str = Form(...),
-    algorithm: str = Form("brand_specific")
+    algorithm: str = Form("brand_specific"),
+    user_preferences: dict = Body(default={})
 ):
     """
     Analyze colors from uploaded image and return paint mixing ratios using specific brand
@@ -313,7 +341,8 @@ async def analyze_colors_with_brand(
         paint_mixes = await paint_mixer.generate_mixing_ratios(
             all_colors, 
             algorithm=algorithm, 
-            user_brand=brand_name
+            user_brand=brand_name,
+            user_preferences=user_preferences
         )
         
         return ColorAnalysisResponse(

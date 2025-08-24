@@ -19,7 +19,7 @@ class PaintMixer:
             "brand_specific": self._brand_specific_mix
         }
     
-    async def generate_mixing_ratios(self, target_colors: List[Color], algorithm: str = "brand_specific", user_brand: Optional[str] = None) -> List[PaintMix]:
+    async def generate_mixing_ratios(self, target_colors: List[Color], algorithm: str = "brand_specific", user_brand: Optional[str] = None, user_preferences: Optional[dict] = None) -> List[PaintMix]:
         """
         Generate paint mixing ratios for target colors
         
@@ -36,15 +36,15 @@ class PaintMixer:
             
             for target_color in target_colors:
                 if algorithm == "brand_specific" and user_brand:
-                    mix = await self._brand_specific_mix(target_color, user_brand)
+                    mix = await self._brand_specific_mix(target_color, user_brand, user_preferences)
                 elif algorithm in self.mixing_algorithms:
-                    mix = await self.mixing_algorithms[algorithm](target_color)
+                    mix = await self.mixing_algorithms[algorithm](target_color, user_preferences)
                 else:
                     # Default to brand-specific if available, otherwise k-nearest
                     if user_brand:
-                        mix = await self._brand_specific_mix(target_color, user_brand)
+                        mix = await self._brand_specific_mix(target_color, user_brand, user_preferences)
                     else:
-                        mix = await self._k_nearest_mix(target_color)
+                        mix = await self._k_nearest_mix(target_color, user_preferences)
                 
                 paint_mixes.append(mix)
             
@@ -55,7 +55,7 @@ class PaintMixer:
             logger.error(f"Error generating paint mixing ratios: {str(e)}")
             raise Exception(f"Failed to generate mixing ratios: {str(e)}")
     
-    async def _brand_specific_mix(self, target_color: Color, brand_name: str) -> PaintMix:
+    async def _brand_specific_mix(self, target_color: Color, brand_name: str, user_preferences: Optional[dict] = None) -> PaintMix:
         """
         Generate paint mix using only colors available from the specified brand
         """
@@ -101,7 +101,7 @@ class PaintMixer:
                 base_colors.append(paint_color_converted)
             
             # Generate mixing instructions
-            instructions = self._generate_mixing_instructions(base_colors, mixing_ratios)
+            instructions = self._generate_mixing_instructions(base_colors, mixing_ratios, user_preferences)
             
             # Calculate difficulty and cost
             difficulty = self._calculate_difficulty(mixing_ratios)
@@ -125,7 +125,7 @@ class PaintMixer:
             logger.error(f"Error in brand-specific mix: {str(e)}")
             raise Exception(f"Failed to calculate brand-specific mix: {str(e)}")
     
-    async def _k_nearest_mix(self, target_color: Color) -> PaintMix:
+    async def _k_nearest_mix(self, target_color: Color, user_preferences: Optional[dict] = None) -> PaintMix:
         """
         Use k-nearest neighbors approach to find best paint combination
         """
@@ -172,7 +172,7 @@ class PaintMixer:
                 base_colors.append(paint_color)
             
             # Generate mixing instructions
-            instructions = self._generate_mixing_instructions(base_colors, mixing_ratios)
+            instructions = self._generate_mixing_instructions(base_colors, mixing_ratios, user_preferences)
             
             # Calculate difficulty and cost
             difficulty = self._calculate_difficulty(mixing_ratios)
@@ -444,21 +444,18 @@ class PaintMixer:
         
         return "\n".join(instructions)
 
-    def _generate_mixing_instructions(self, base_colors: List[PaintColor], ratios: List[float]) -> str:
+    def _generate_mixing_instructions(self, base_colors: List[PaintColor], ratios: List[float], user_preferences: dict = None) -> str:
         """Generate human-readable mixing instructions with practical measurements"""
         instructions = []
         
         # Calculate total parts for ratio conversion
         total_parts = sum(ratios)
         
-        # Convert to practical measurements
-        # Option 1: Drop-based (assuming 20 drops = 1ml)
-        # Option 2: Volume-based (ml)
-        # Option 3: Simple ratios
-        
-        # Calculate drop counts (20 drops per ml)
-        drops_per_ml = 20
-        total_ml = 5  # Assume we're making 5ml total
+        # Get user preferences or use defaults
+        user_prefs = user_preferences or {}
+        drops_per_ml = user_prefs.get('drops_per_ml', 20)  # User can specify drops per ml
+        total_ml = user_prefs.get('total_ml', 5)  # User can specify total volume
+        preferred_unit = user_prefs.get('preferred_unit', 'drops')  # 'drops', 'ml', or 'both'
         
         drop_instructions = []
         volume_instructions = []
@@ -478,30 +475,29 @@ class PaintMixer:
             drop_instructions.append(f"{drops} drops {paint_color.name}")
         
         # Build comprehensive instructions
-        instructions.append("🎨 **Mixing Instructions:**")
+        instructions.append(f"🎨 **Mixing Instructions for {total_ml}ml Total:**")
         instructions.append("")
         
-        # Drop-based instructions (most practical)
-        instructions.append("💧 **By Drops (20 drops = 1ml):**")
-        for i, instruction in enumerate(drop_instructions):
-            if i == 0:
-                instructions.append(f"• Start with {instruction}")
-            else:
-                instructions.append(f"• Add {instruction}")
+        # Show instructions based on user preference
+        if preferred_unit == 'drops' or preferred_unit == 'both':
+            instructions.append(f"💧 **By Drops ({drops_per_ml} drops = 1ml):**")
+            for i, instruction in enumerate(drop_instructions):
+                if i == 0:
+                    instructions.append(f"• Start with {instruction}")
+                else:
+                    instructions.append(f"• Add {instruction}")
+            instructions.append("")
         
-        instructions.append("")
+        if preferred_unit == 'ml' or preferred_unit == 'both':
+            instructions.append("📏 **By Volume:**")
+            for i, instruction in enumerate(volume_instructions):
+                if i == 0:
+                    instructions.append(f"• Start with {instruction}")
+                else:
+                    instructions.append(f"• Add {instruction}")
+            instructions.append("")
         
-        # Volume-based instructions
-        instructions.append("📏 **By Volume:**")
-        for i, instruction in enumerate(volume_instructions):
-            if i == 0:
-                instructions.append(f"• Start with {instruction}")
-            else:
-                instructions.append(f"• Add {instruction}")
-        
-        instructions.append("")
-        
-        # Simple ratio instructions
+        # Always show ratios
         instructions.append("⚖️ **Simple Ratio:**")
         instructions.append(f"• Mix in ratio: {' : '.join(ratio_instructions)}")
         
@@ -511,11 +507,19 @@ class PaintMixer:
         instructions.append("• Test on a small area first to ensure desired result")
         instructions.append("• Adjust ratios slightly if needed for your specific project")
         instructions.append("• Keep track of your successful mixes for future reference")
+        
+        # Add user preference info
+        if user_prefs:
+            instructions.append("")
+            instructions.append("⚙️ **Your Preferences Applied:**")
+            instructions.append(f"• Total volume: {total_ml}ml")
+            instructions.append(f"• Drop ratio: {drops_per_ml} drops per ml")
+            instructions.append(f"• Preferred unit: {preferred_unit}")
+        
         instructions.append("")
-        instructions.append("💡 **Custom Volume:** Want to mix a different amount?")
-        instructions.append("• For 10ml: Double all measurements above")
-        instructions.append("• For 2.5ml: Halve all measurements above")
-        instructions.append("• For 1ml: Divide all measurements by 5")
+        instructions.append("💡 **Want Different Measurements?**")
+        instructions.append("• Adjust your preferences in the settings")
+        instructions.append("• Or specify custom volume when generating mixes")
         
         return "\n".join(instructions)
     
