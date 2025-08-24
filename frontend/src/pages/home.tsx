@@ -10,6 +10,12 @@ export default function Home() {
   const [analysisResults, setAnalysisResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [brandInfo, setBrandInfo] = useState<any>(null);
+  const [userPreferences, setUserPreferences] = useState({
+    total_ml: 5,
+    drops_per_ml: 20,
+    preferred_unit: 'drops'
+  });
   const router = useRouter();
 
   const handleLogout = () => {
@@ -46,11 +52,12 @@ export default function Home() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const brandInfo = await response.json();
-      console.log('Found brand info:', brandInfo);
+      const brandData = await response.json();
+      console.log('Found brand info:', brandData);
       
-      // Set the brand as selected
-      setSelectedBrand(brandInfo.name);
+      // Store the brand information and set as selected
+      setBrandInfo(brandData);
+      setSelectedBrand(brandData.name);
       
     } catch (err) {
       console.error('Error searching brand:', err);
@@ -79,6 +86,9 @@ export default function Home() {
       if (selectedBrand) {
         formData.append('brand_name', selectedBrand);
         formData.append('algorithm', 'brand_specific');
+        
+        // Add user preferences
+        formData.append('user_preferences', JSON.stringify(userPreferences));
       }
       
       const response = await fetch(endpoint, {
@@ -225,8 +235,99 @@ export default function Home() {
                   >
                     Change brand
                   </button>
+                  
+                  {/* Paint Brand Information Display */}
+                  <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Paint Brand Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Product Images */}
+                      <div>
+                        <h5 className="font-medium text-gray-700 mb-2">Product Images</h5>
+                        <div className="flex space-x-2 overflow-x-auto">
+                          {brandInfo?.productImages?.map((imageUrl: string, index: number) => (
+                            <img
+                              key={index}
+                              src={imageUrl}
+                              alt={`${selectedBrand} product ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/palette-genie.png'; // Fallback image
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Popular Colors */}
+                      <div>
+                        <h5 className="font-medium text-gray-700 mb-2">Popular Colors</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {brandInfo?.popularColors?.map((color: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                            >
+                              {color}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
+              
+              {/* User Preferences Section */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                <h4 className="text-lg font-semibold text-gray-800 mb-3">🎨 Mixing Preferences</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Total Volume (ml)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      step="0.5"
+                      defaultValue="5"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => setUserPreferences(prev => ({ ...prev, total_ml: parseFloat(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Drops per ml
+                    </label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="30"
+                      step="1"
+                      defaultValue="20"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => setUserPreferences(prev => ({ ...prev, drops_per_ml: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Preferred Unit
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      defaultValue="drops"
+                      onChange={(e) => setUserPreferences(prev => ({ ...prev, preferred_unit: e.target.value }))}
+                    >
+                      <option value="drops">Drops</option>
+                      <option value="ml">Milliliters</option>
+                      <option value="both">Both</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  These preferences will be used for all paint mixing instructions
+                </p>
+              </div>
             </div>
           </div>
 
