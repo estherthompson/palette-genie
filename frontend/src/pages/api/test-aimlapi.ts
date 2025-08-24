@@ -10,7 +10,7 @@ export default async function handler(
 
   try {
     const API_KEY = process.env.AIMLAPI_KEY || '187fa5d8a5d2445da69a9a126d3f8f6c';
-    const API_URL = 'https://api.aimlapi.com/chat/completions';
+    const API_URL = 'https://api.aimlapi.com/v1/chat/completions';
     
     console.log('🧪 Testing aimlapi.com API...');
     console.log('🔑 API Key:', API_KEY.substring(0, 8) + '...');
@@ -23,7 +23,7 @@ export default async function handler(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'mistralai/mistral-tiny',
         messages: [
           {
             role: 'user',

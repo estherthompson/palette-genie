@@ -14,7 +14,7 @@ You're currently using aimlapi.com with API key: `187fa5d8a5d2445da69a9a126d3f8f
 ```typescript
 // Your current integration in /api/search-paint-brand.ts
 const API_KEY = '187fa5d8a5d2445da69a9a126d3f8f6c';
-const API_URL = 'https://api.aimlapi.com/chat/completions';
+const API_URL = 'https://api.aimlapi.com/v1/chat/completions';
 
 const response = await fetch(API_URL, {
   method: 'POST',
@@ -46,14 +46,45 @@ const response = await fetch(API_URL, {
 
 **Security Note:** Your API key is stored in environment variables (`.env.local`) and is not committed to git.
 
+**Available Models:**
+According to [aimlapi.com documentation](https://docs.aimlapi.com/), you have access to 200+ models including:
+- **OpenAI**: GPT-4o, GPT-3.5-turbo, GPT-4, DALL-E 3
+- **Anthropic**: Claude 3.5 Sonnet, Claude 4 Opus
+- **Google**: Gemini 2.0 Flash, Gemini 2.5 Pro
+- **Meta**: Llama 3.1, Llama 4
+- **And many more...**
+
 **Troubleshooting 403 Errors:**
 If you get a 403 Forbidden error, try these steps:
 1. Verify your API key is correct
 2. Check if you have sufficient credits/quota
-3. Ensure the API endpoint URL is correct
+3. Ensure the API endpoint URL is correct (`https://api.aimlapi.com/v1/chat/completions`)
 4. Test with the `/api/test-aimlapi` endpoint first
 
-### 2. OpenChat (Open Source - Alternative)
+### 2. Python SDK Integration (Backend)
+
+For your Python backend, you can use the official OpenAI SDK with aimlapi.com:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.aimlapi.com/v1",
+    api_key="187fa5d8a5d2445da69a9a126d3f8f6c",    
+)
+
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a paint expert..."},
+        {"role": "user", "content": "Tell me about Liquitex paint brand"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+### 3. OpenChat (Open Source - Alternative)
 
 [OpenChat](https://github.com/imoneoi/openchat) is a free, open-source alternative to ChatGPT that can run locally on your servers.
 

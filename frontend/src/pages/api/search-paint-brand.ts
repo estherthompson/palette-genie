@@ -26,14 +26,14 @@ export default async function handler(
 
     // Integration with aimlapi.com API
     const API_KEY = process.env.AIMLAPI_KEY || '187fa5d8a5d2445da69a9a126d3f8f6c';
-    const API_URL = 'https://api.aimlapi.com/chat/completions';
+    const API_URL = 'https://api.aimlapi.com/v1/chat/completions';
     
     try {
       console.log('🔍 Searching for paint brand:', brandName);
       console.log('🔑 Using API key:', API_KEY.substring(0, 8) + '...');
       
       const requestBody = {
-        model: 'gpt-3.5-turbo',
+        model: 'mistralai/mistral-tiny',
         messages: [
           {
             role: 'system',
