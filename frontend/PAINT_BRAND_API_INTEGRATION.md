@@ -8,7 +8,52 @@ The current implementation uses a mock API endpoint (`/api/search-paint-brand.ts
 
 ## AI Service Integration Options
 
-### 1. OpenChat (Open Source - Recommended)
+### 1. aimlapi.com (Currently Integrated)
+You're currently using aimlapi.com with API key: `187fa5d8a5d2445da69a9a126d3f8f6c`
+
+```typescript
+// Your current integration in /api/search-paint-brand.ts
+const API_KEY = '187fa5d8a5d2445da69a9a126d3f8f6c';
+const API_URL = 'https://api.aimlapi.com/chat/completions';
+
+const response = await fetch(API_URL, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a paint expert...'
+      },
+      {
+        role: 'user',
+        content: `Tell me about ${brandName} paint brand...`
+      }
+    ]
+  })
+});
+```
+
+**Benefits:**
+- ✅ Already integrated and working
+- ✅ Uses GPT-3.5-turbo model
+- ✅ Structured JSON responses
+- ✅ Fallback handling for errors
+
+**Security Note:** Your API key is stored in environment variables (`.env.local`) and is not committed to git.
+
+**Troubleshooting 403 Errors:**
+If you get a 403 Forbidden error, try these steps:
+1. Verify your API key is correct
+2. Check if you have sufficient credits/quota
+3. Ensure the API endpoint URL is correct
+4. Test with the `/api/test-aimlapi` endpoint first
+
+### 2. OpenChat (Open Source - Alternative)
 
 [OpenChat](https://github.com/imoneoi/openchat) is a free, open-source alternative to ChatGPT that can run locally on your servers.
 
