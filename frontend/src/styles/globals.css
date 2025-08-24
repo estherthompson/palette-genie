@@ -17,3 +17,35 @@ body {
   color: var(--foreground);
   font-family: 'Recoleta', Arial, Helvetica, sans-serif;
 }
+
+.dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  background: #ffffff;
+  padding: 12px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.dock button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: #55423d;
+  cursor: pointer;
+}
+
+.dock button.dock-active {
+  color: #ffc6ac;
+}
+
+.dock-label {
+  font-size: 12px;
+  margin-top: 4px;
+}
